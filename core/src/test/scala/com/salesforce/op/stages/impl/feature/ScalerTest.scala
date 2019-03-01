@@ -28,29 +28,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.op.filters
+package com.salesforce.op.stages.impl.feature
 
-import com.salesforce.op.features.FeatureDistributionType
+import com.salesforce.op.test.TestSparkContext
+import org.junit.runner.RunWith
+import org.scalatest.FlatSpec
+import org.scalatest.junit.JUnitRunner
 
-trait FiltersTestData {
+@RunWith(classOf[JUnitRunner])
+class ScalerTest extends FlatSpec with TestSparkContext {
 
-  protected val eps = 1E-2
+  Spec[Scaler] should "error on invalid data" in {
+    val error = intercept[IllegalArgumentException](
+      Scaler.apply(scalingType = ScalingType.Linear, args = EmptyArgs())
+    )
+    error.getMessage shouldBe "Invalid combination of scaling type 'Linear' and args type 'EmptyArgs'"
+  }
 
-  protected val trainSummaries = Seq(
-    FeatureDistribution("A", None, 10, 1, Array(1, 4, 0, 0, 6), Array.empty),
-    FeatureDistribution("B", None, 20, 20, Array(2, 8, 0, 0, 12), Array.empty),
-    FeatureDistribution("C", Some("1"), 10, 1, Array(1, 4, 0, 0, 6), Array.empty),
-    FeatureDistribution("C", Some("2"), 20, 19, Array(2, 8, 0, 0, 12), Array.empty),
-    FeatureDistribution("D", Some("1"), 10, 9, Array(1, 4, 0, 0, 6), Array.empty),
-    FeatureDistribution("D", Some("2"), 20, 19, Array(2, 8, 0, 0, 12), Array.empty)
-  )
+  it should "correctly build construct a LinearScaler" in {
+    val linearScaler = Scaler.apply(scalingType = ScalingType.Linear,
+      args = LinearScalerArgs(slope = 1.0, intercept = 2.0))
+    linearScaler shouldBe a[LinearScaler]
+    linearScaler.scalingType shouldBe ScalingType.Linear
+  }
 
-  protected val scoreSummaries = Seq(
-    FeatureDistribution("A", None, 10, 8, Array(1, 4, 0, 0, 6), Array.empty, FeatureDistributionType.Scoring),
-    FeatureDistribution("B", None, 20, 20, Array(2, 8, 0, 0, 12), Array.empty, FeatureDistributionType.Scoring),
-    FeatureDistribution("C", Some("1"), 10, 1, Array(0, 0, 10, 10, 0), Array.empty, FeatureDistributionType.Scoring),
-    FeatureDistribution("C", Some("2"), 20, 19, Array(2, 8, 0, 0, 12), Array.empty, FeatureDistributionType.Scoring),
-    FeatureDistribution("D", Some("1"), 0, 0, Array(0, 0, 0, 0, 0), Array.empty, FeatureDistributionType.Scoring),
-    FeatureDistribution("D", Some("2"), 0, 0, Array(0, 0, 0, 0, 0), Array.empty, FeatureDistributionType.Scoring)
-  )
+  it should "correctly build construct a LogScaler" in {
+    val linearScaler = Scaler.apply(scalingType = ScalingType.Logarithmic, args = EmptyArgs())
+    linearScaler shouldBe a[LogScaler]
+    linearScaler.scalingType shouldBe ScalingType.Logarithmic
+  }
 }
+
